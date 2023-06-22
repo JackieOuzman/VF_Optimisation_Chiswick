@@ -134,7 +134,7 @@ VF_paddock <-  st_transform(VF_paddock, crs = 28355)
 
 water_pt <-  st_read("W:/VF/Sheep_Chiswick_2022/spatial_boundaries/water_pt.shp")
 
-###--- bugger No date up to here ----###
+
 
 ggplot() +
   geom_sf(data = Chiswick_hard_fence_bound, color = "black", fill = NA) +
