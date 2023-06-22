@@ -53,7 +53,7 @@ GPS <- GPS %>%
 GPS <- GPS %>% 
   mutate(date = as.Date(local_time, tz= "Australia/Sydney"),
          DOY = yday(date))
-#--- up to here---#
+
 
 #############################################################################################
 ####    Assign collar to sheep names #####
@@ -72,28 +72,21 @@ GPS <- GPS %>%
     
   ))
 #only keep the collar that sue said:)
-animal_GPS_data <- animal_GPS_data %>%
+GPS <- GPS %>%
   filter(Sheep_ID != "other")
-
-
-
-
-GPS <- rbind (GPS_no2 , animal_2 )
-rm(animal_2, animal_1390826,animal_1391505, GPS_no2 )
-
-
 
 ## ok lets just remove the Nulls
 GPS <- GPS %>% 
   filter(fencesID!= "NULL")
 
-str(GPS)
-
-
 ## reorder the clms
-GPS <- GPS %>% 
-  dplyr::select(ID_jaxs,Sheep_ID, deviceUIDHex:local_time)
+# GPS <- GPS %>% 
+#   dplyr::select(ID_jaxs,Sheep_ID, deviceUIDHex:local_time)
 
+
+
+
+str(GPS)
 
 
 
@@ -121,7 +114,7 @@ GPS_sf_trans <-
 rm(GPS_sf)
 
 
-
+str(GPS_sf_trans)
 
 ############################################################################################
 ############                  bring in boundaries             ##############################
@@ -141,7 +134,7 @@ VF_paddock <-  st_transform(VF_paddock, crs = 28355)
 
 water_pt <-  st_read("W:/VF/Sheep_Chiswick_2022/spatial_boundaries/water_pt.shp")
 
-###--- bugger up to here ----###
+###--- bugger No date up to here ----###
 
 ggplot() +
   geom_sf(data = Chiswick_hard_fence_bound, color = "black", fill = NA) +
@@ -157,75 +150,79 @@ ggplot() +
 ################################################################################
 #### filtering out GPS data based on times start and end of the trial
 
-
-# start of trial and training period (according to sue) - keep everything after  17th 11:35 or 11:40 s above
+GPS_sf_trans <- GPS_sf_trans %>% 
+  filter(
+    local_time >=  ymd_hms("2022-06-28 09:50:00", tz= "Australia/Sydney"))
 
 GPS_sf_trans <- GPS_sf_trans %>% 
   filter(
-    local_time >=  ymd_hms("2022-10-17 11:40:00", tz= "Australia/Adelaide"))
-
-GPS_sf_trans <- GPS_sf_trans %>% 
-  filter(
-    local_time <=  ymd_hms("2022-10-21 11:50:00", tz= "Australia/Adelaide"))
+    local_time <=  ymd_hms("2022-07-02 10:10:00", tz= "Australia/Sydney"))
 
 
-### define a training period with new clm
+### define a training period with new clm No training period aniamls were allowed to acclimatise in neighboring paddock
 
-GPS_sf_trans <- GPS_sf_trans %>% 
-  mutate(training_period = case_when(
-    local_time <= ymd_hms("2022-10-17 13:10:00", tz= "Australia/Adelaide")~ "training",
-    TRUE                      ~ "non_training"
-    
-  ))
+# GPS_sf_trans <- GPS_sf_trans %>% 
+#   mutate(training_period = case_when(
+#     local_time <= ymd_hms("2022-10-17 13:10:00", tz= "Australia/Sydney")~ "training",
+#     TRUE                      ~ "non_training"
+#     
+#   ))
 
 
-
+# Times sheep were brought in each day for the VF Chiswick trial;
+# 28/6- sheep out 9:50
+# 29/6 11:21- 12:21
+# 30/6 10:34- 11:36
+# 1/7- 10:37- 11:20
+# 2/7- Brought in at 10:10
 #### each day the animals were yarded so i need to remove this data
 
 # let divide the data per day
-day_17 <- GPS_sf_trans %>%  filter(date == "2022-10-17")
-day_18 <- GPS_sf_trans %>%  filter(date == "2022-10-18")
-day_19 <- GPS_sf_trans %>%  filter(date == "2022-10-19")
-day_20 <- GPS_sf_trans %>%  filter(date == "2022-10-20")
-day_21 <- GPS_sf_trans %>%  filter(date == "2022-10-21")
+day_28 <- GPS_sf_trans %>%  filter(date == "2022-06-28")
+day_29 <- GPS_sf_trans %>%  filter(date == "2022-06-29")
+day_30 <- GPS_sf_trans %>%  filter(date == "2022-06-30")
+day_1 <- GPS_sf_trans %>%  filter(date == "2022-07-01")
+day_2 <- GPS_sf_trans %>%  filter(date == "2022-07-02")
+
 
 # keep everything after before yarding and after yarding
 
-day_18_before_yarding <- day_18 %>%
-  filter(local_time <=  ymd_hms("2022-10-18 09:40:00", tz = "Australia/Adelaide"))
-day_18_after_yarding <- day_18 %>%
-  filter(local_time >=  ymd_hms("2022-10-18 10:30:00", tz = "Australia/Adelaide"))
+day_29_before_yarding <- day_29 %>%
+  filter(local_time <=  ymd_hms("2022-06-29 11:21:00", tz = "Australia/Sydney"))
+day_29_after_yarding <- day_29 %>%
+  filter(local_time >=  ymd_hms("2022-06-29 12:21:00", tz = "Australia/Sydney"))
 
-day_18_clean <- rbind(day_18_before_yarding, day_18_after_yarding)
-rm(day_18_before_yarding, day_18_after_yarding, day_18)
-
-
-day_19_before_yarding <- day_19 %>%
-  filter(local_time <=  ymd_hms("2022-10-19 09:10:00", tz = "Australia/Adelaide"))
-day_19_after_yarding <- day_19 %>%
-  filter(local_time >=  ymd_hms("2022-10-19 10:18:00", tz = "Australia/Adelaide"))
-
-day_19_clean <- rbind(day_19_before_yarding, day_19_after_yarding)
-rm(day_19_before_yarding, day_19_after_yarding, day_19)
+day_29_clean <- rbind(day_29_before_yarding, day_29_after_yarding)
+rm(day_29_before_yarding, day_29_after_yarding, day_29)
 
 
+day_30_before_yarding <- day_30 %>%
+  filter(local_time <=  ymd_hms("2022-06-30 10:34:00", tz = "Australia/Sydney"))
+day_30_after_yarding <- day_30 %>%
+  filter(local_time >=  ymd_hms("2022-06-30 11:36:00", tz = "Australia/Sydney"))
 
-day_20_before_yarding <- day_20 %>%
-  filter(local_time <=  ymd_hms("2022-10-20 08:58:00", tz = "Australia/Adelaide"))
-day_20_after_yarding <- day_20 %>%
-  filter(local_time >=  ymd_hms("2022-10-20 10:19:00", tz = "Australia/Adelaide"))
+day_30_clean <- rbind(day_30_before_yarding, day_30_after_yarding)
+rm(day_30_before_yarding, day_30_after_yarding, day_30)
 
-day_20_clean <- rbind(day_20_before_yarding, day_20_after_yarding)
-rm(day_20_before_yarding, day_20_after_yarding, day_20)
+day_1_before_yarding <- day_1 %>%
+  filter(local_time <=  ymd_hms("2022-07-01 10:37:00", tz = "Australia/Sydney"))
+day_1_after_yarding <- day_1 %>%
+  filter(local_time >=  ymd_hms("2022-07-01 11:20:00", tz = "Australia/Sydney"))
+
+day_1_clean <- rbind(day_1_before_yarding, day_1_after_yarding)
+rm(day_1_before_yarding, day_1_after_yarding, day_1)
 
 
 ### put it back togther 
 
-animals_GPS_trim_time <- rbind(day_17, day_18_clean, day_19_clean, day_20_clean, day_21)
+animals_GPS_trim_time <- rbind(day_28, day_29_clean, day_30_clean, day_1_clean, day_2)
 
-rm(day_17, day_18_clean, day_19_clean, day_21, day_20_clean, GPS_sf_trans)
+rm(day_28, day_29_clean, day_30_clean, day_1_clean, day_2)
 
 ########################################################################################
+
+
+
 ########################################################################################
 
 ### remove the water and other animals logs
@@ -242,8 +239,8 @@ animals_GPS_trim_time <- animals_GPS_trim_time %>%
 ## check
 
 ggplot() +
-  geom_sf(data = hard_fence_bound, color = "black", fill = NA) +
-  geom_sf(data = VF, color = "black", fill = NA) +
+  geom_sf(data = Chiswick_hard_fence_bound, color = "black", fill = NA) +
+  geom_sf(data = VF_paddock, color = "black", fill = NA) +
   geom_sf(data = animals_GPS_trim_time ,alpha = 0.03) +
   facet_wrap(.~ date)+
   theme_bw()+
@@ -271,7 +268,7 @@ ggplot() +
 
 
 
-output_path <- "W:/VF/Optimising_VF/Lameroo/data_prep"  #animals_GPS_trim_time
+output_path <- "W:/VF/Optimising_VF/Chiswick/data_prep"  #animals_GPS_trim_time
 
 
 ############################################################################################################################
