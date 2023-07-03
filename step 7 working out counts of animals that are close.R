@@ -10,7 +10,7 @@ library("readxl")
 #####################################################################################
 
 
-## we have 4 treatments 66,33,100,control
+
 Min_dist <-1.5 #the filter for the min distance between animals
 
 
